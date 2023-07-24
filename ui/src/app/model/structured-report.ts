@@ -49,7 +49,12 @@ export interface INameChange {
 
 export interface IWarnings {
 	warningType: string
-	warningList: string[]
+	warningList: WarningClassified[]
+}
+
+export interface WarningClassified {
+	issueType: string
+	description: string
 }
 
 export interface ISchemaReport {

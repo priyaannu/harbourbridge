@@ -2,36 +2,258 @@
   <div class="sidenav-view-assessment-header">
     <span class="mat-h2 header-title">Assessment report</span>
     <div class="btn-source-select">
-    <button  mat-raised-button color="primary" class="split-button-left" (click)="downloadReports()">
-      DOWNLOAD REPORTS
-    </button>
-    <button  mat-raised-button color="primary" class="split-button-right" [matMenuTriggerFor]="menu">
-      <mat-icon aria-hidden="false" aria-label="More options">expand_more</mat-icon>
-    </button>
-    <mat-menu #menu="matMenu" xPosition="before">
-      <button mat-menu-item (click)="downloadTextReport()">
-        Download Text Report
+      <button mat-raised-button color="primary" class="split-button-left" (click)="downloadReports()">
+        DOWNLOAD REPORTS
       </button>
-      <button mat-menu-item (click)="downloadStructuredReport()">
-        Download Structured Report
+      <button mat-raised-button color="primary" class="split-button-right" [matMenuTriggerFor]="menu">
+        <mat-icon aria-hidden="false" aria-label="More options">expand_more</mat-icon>
       </button>
-    </mat-menu>
-    <button class="close-button" mat-icon-button color="primary" (click)="closeSidenav()">
-      <mat-icon class="close-icon">close</mat-icon>
-    </button>
-  </div>
+      <mat-menu #menu="matMenu" xPosition="before">
+        <button mat-menu-item (click)="downloadTextReport()">
+          Download Text Report
+        </button>
+        <button mat-menu-item (click)="downloadStructuredReport()">
+          Download Structured Report
+        </button>
+      </mat-menu>
+      <button class="close-button" mat-icon-button color="primary" (click)="closeSidenav()">
+        <mat-icon class="close-icon">close</mat-icon>
+      </button>
+    </div>
   </div>
   <div class="content">
-    <p>
-      Estimation for {{ srcDbType.toUpperCase() }} to Spanner conversion:
-      {{ conversionRatePercentage.good }}% of tables can be converted automatically,
-      {{ conversionRatePercentage.ok }}% requires minimal conversion changes and
-      {{ conversionRatePercentage.bad }}% requires high complexity conversion changes.
-    </p>
+    <p class="databaseName">{{connectionDetail}}</p>
+    <p class="summaryText">{{summaryText}}</p>
+    <mat-card>
+      <div class="sidenav-percentage-bar">
+        <div class="danger-background" [ngStyle]="{ 'width.%': this.conversionRatePercentage.bad }"></div>
+        <div class="warning-background" [ngStyle]="{ 'width.%': this.conversionRatePercentage.ok }"></div>
+        <div class="success-background" [ngStyle]="{ 'width.%': this.conversionRatePercentage.good }"></div>
+      </div>
+      <hr />
+      <br />
+      <div class="sidenav-percentage-indent">
+        <span><mat-icon class="icon danger"> circle </mat-icon>
+          <span> Not a great conversion</span></span>
+        <span><mat-icon class="icon warning"> circle </mat-icon>
+          <span> Converted with warnings</span></span>
+        <span><mat-icon class="icon success"> circle </mat-icon>
+          <span> Converted automatically</span></span>
+      </div>
+    </mat-card>
+    <br>
+    <h3 class="sidenav-title">Conversion status by table</h3>
+    <table mat-table [dataSource]="rateCountDataSource" class="sidenav-conversionByTable">
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef>Total tables</th>
+        <td mat-cell class="cells" *matCellDef="let element">{{ element.total }}</td>
+      </ng-container>
 
-    <p></p>
+      <ng-container matColumnDef="bad" class="bad">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-icon class="icon danger icon-size icons"> error </mat-icon>Converted with many issues
+        </th>
+        <td mat-cell class="cells" *matCellDef="let element">{{ element.bad }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="ok">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-icon class="icon warning icon-size icons"> warning</mat-icon>Conversion some warnings &
+          suggestions
+        </th>
+        <td mat-cell class="cells" *matCellDef="let element">{{ element.ok }}</td>
+      </ng-container>
+      <ng-container matColumnDef="good">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-icon class="icon success icon-size icons"> check_circle </mat-icon>100% conversion
+        </th>
+        <td mat-cell class="cells" *matCellDef="let element">{{ element.good }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="rateCountDisplayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: rateCountDisplayedColumns"></tr>
+    </table>
+
+    <br>
+    <h3>Summarized Table Report</h3>
+    <div class="warning-report">
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon
+              matTooltip="Error: Please resolve them to proceed with the migration"
+              matTooltipPosition="above"
+              class="danger"
+            >
+              error
+            </mat-icon>
+            ERRORS
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="TableHeaderData_Errors" class="sidenav-databaseDefinitions">
+
+          <!--- Note that these columns can be defined in any order.
+                  The actual rendered columns are set as a property on the row definition" -->
+
+          <!-- Position Column -->
+          <ng-container matColumnDef="position">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> No. </th>
+            <td mat-cell *matCellDef="let element"> {{element.position}} </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> Description </th>
+            <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+          </ng-container>
+
+          <!-- Weight Column -->
+          <ng-container matColumnDef="tableNumbers">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> Table Numbers </th>
+            <td mat-cell *matCellDef="let element"> {{element.tableNumbers}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        </table>
+      </mat-expansion-panel>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon
+            matTooltip="Warning : Changes made because of differences in source and spanner capabilities."
+            matTooltipPosition="above"
+            class="warning"
+          >
+            warning
+          </mat-icon>
+            WARNINGS
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="TableHeaderData_Warnings" class="sidenav-databaseDefinitions">
+
+          <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> {{column}} </th>
+            <td mat-cell *matCellDef="let element"> {{element[column]}} </td>
+          </ng-container>
+
+          <ng-container matColumnDef="expand">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border">&nbsp;</th>
+            <td mat-cell *matCellDef="let element">
+              <button mat-icon-button aria-label="expand row">
+                <mat-icon *ngIf="expandedElements !== element">keyboard_arrow_down</mat-icon>
+                <mat-icon *ngIf="expandedElements === element">keyboard_arrow_up</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
+          <ng-container matColumnDef="expandedDetail">
+            <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplayWithExpand.length">
+              <div class="example-element-description">
+                {{element.tableNamesJoinedByComma}}
+                hello there
+              </div>
+            </td>
+          </ng-container>
+          
+
+          <tr mat-header-row *matHeaderRowDef="columnsToDisplayWithExpand"></tr>
+          <tr mat-row *matRowDef="let element; columns: columnsToDisplayWithExpand;" class="example-element-row"
+            [class.example-expanded-row]="expandedElements === element"
+            (click)="expandedElements = expandedElements === element ? null : element">
+          </tr>
+          <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+        </table>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon
+              matTooltip="Suggestion : We highly recommend you make these changes or else it will impact your DB performance."
+              matTooltipPosition="above"
+              class="suggestion"
+            >
+            wb_incandescent
+            </mat-icon>
+            SUGGESTIONS
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="TableHeaderData_Suggestions" class="sidenav-databaseDefinitions">
+
+          <!--- Note that these columns can be defined in any order.
+                  The actual rendered columns are set as a property on the row definition" -->
+
+          <!-- Position Column -->
+          <ng-container matColumnDef="position">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> No. </th>
+            <td mat-cell *matCellDef="let element"> {{ element.position }} </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> Description </th>
+            <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+          </ng-container>
+
+          <!-- Weight Column -->
+          <ng-container matColumnDef="tableNumbers">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> Table Numbers </th>
+            <td mat-cell *matCellDef="let element"> {{element.tableNumbers}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        </table>
+      </mat-expansion-panel>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon
+              matTooltip="Note : This is informational and you don't need to do anything."
+              matTooltipPosition="above"
+              class="success"
+            >
+            check_circle
+            </mat-icon>
+            NOTES
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="TableHeaderData_Notes" class="sidenav-databaseDefinitions">
+
+          <!--- Note that these columns can be defined in any order.
+                  The actual rendered columns are set as a property on the row definition" -->
+
+          <!-- Position Column -->
+          <ng-container matColumnDef="position">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> No. </th>
+            <td mat-cell *matCellDef="let element"> {{element.position}} </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> Description </th>
+            <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+          </ng-container>
+
+          <!-- Weight Column -->
+          <ng-container matColumnDef="tableNumbers">
+            <th mat-header-cell *matHeaderCellDef class="sidenav-header-border"> Table Numbers </th>
+            <td mat-cell *matCellDef="let element"> {{element.tableNumbers}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        </table>
+      </mat-expansion-panel>
+    </div>
+    <br>
     <h3 class="sidenav-title">Source and destination database definitions</h3>
-    <table mat-table [dataSource]="dbDataSource"  class = "sidenav-databaseDefinitions">
+    <table mat-table [dataSource]="dbDataSource" class="sidenav-databaseDefinitions">
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef class="sidenav-header-border">Title</th>
         <td mat-cell *matCellDef="let element">{{ element.title }}</td>
@@ -50,69 +272,5 @@
       <tr mat-header-row *matHeaderRowDef="dbDisplayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: dbDisplayedColumns"></tr>
     </table>
-    <br>
-    <h3 class="sidenav-title">Conversion status by table</h3>
-    <table mat-table [dataSource]="rateCountDataSource" class="sidenav-conversionByTable">
-      <ng-container matColumnDef="total" >
-        <th mat-header-cell *matHeaderCellDef>Total tables</th>
-        <td mat-cell class="cells" *matCellDef="let element">{{ element.total }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="bad" class="bad">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-icon class="icon danger icon-size icons"> error </mat-icon>Converted with many issues
-        </th>
-        <td mat-cell class="cells" *matCellDef="let element">{{ element.bad }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="ok">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-icon class="icon warning icon-size icons"> warning</mat-icon>Conversion some warnings &
-          suggestions
-        </th>
-        <td mat-cell  class="cells" *matCellDef="let element">{{ element.ok }}</td>
-      </ng-container>
-      <ng-container matColumnDef="good">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-icon class="icon success icon-size icons"> check_circle </mat-icon>100% conversion
-        </th>
-        <td mat-cell  class="cells" *matCellDef="let element">{{ element.good }}</td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="rateCountDisplayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: rateCountDisplayedColumns"></tr>
-    </table>
-
-    <br>
-    <mat-card>
-      <div class="sidenav-percentage-bar">
-        <div
-          class="danger-background"
-          [ngStyle]="{ 'width.%': this.conversionRatePercentage.bad }"
-        ></div>
-        <div
-          class="warning-background"
-          [ngStyle]="{ 'width.%': this.conversionRatePercentage.ok }"
-        ></div>
-        <div
-          class="success-background"
-          [ngStyle]="{ 'width.%': this.conversionRatePercentage.good }"
-        ></div>
-      </div>
-      <hr />
-      <br />
-      <div class="sidenav-percentage-indent">
-        <span
-          ><mat-icon class="icon danger"> circle </mat-icon>
-          <span>Not a great conversion</span></span
-        >
-        <span
-          ><mat-icon class="icon warning"> circle </mat-icon>
-          <span>Converted with warnings</span></span
-        >
-        <span><mat-icon class="icon success"> circle </mat-icon> <span>Converted automatically</span></span>
-      </div>
-    </mat-card>
-
   </div>
 </div>

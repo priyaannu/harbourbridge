@@ -62,7 +62,12 @@ type NameChange struct {
 
 type Warnings struct {
 	WarningType string   `json:"warningType"`
-	WarningList []string `json:"warningList"`
+	WarningList []WarningClassified `json:"warningList"`
+}
+
+type WarningClassified struct {
+	IssueType string `json:"issueType"`
+	Description string `json:"description"`
 }
 
 type SchemaReport struct {
@@ -262,8 +267,12 @@ func fetchTableReports(inputTableReports []tableReport, conv *internal.Conv) (ta
 		//4. Warnings
 		for _, x := range t.Body {
 			var warnings = Warnings{WarningType: x.Heading}
-			for _, l := range x.Lines {
-				warnings.WarningList = append(warnings.WarningList, l)
+			for _, l := range x.WarningBody {
+				wc := WarningClassified{
+					IssueType: l.IssueType,
+					Description: l.Description,
+				}
+				warnings.WarningList = append(warnings.WarningList, wc)
 			}
 			tableReport.Warnings = append(tableReport.Warnings, warnings)
 		}
